@@ -72,9 +72,46 @@ class ReflexAgent(Agent):
         newFood = successorGameState.getFood()
         newGhostStates = successorGameState.getGhostStates()
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
+        newGhostPos = successorGameState.getGhostPositions()  #Newly defined
+        newFoodPos = newFood.asList()  #Newly defined
+        distancePtoF = 99999 #newly defined
+        distancePtoG = 0 #newly defined
+        # print "Successor state : ",successorGameState
+        # print "New position :", newPos
+        # print "New Food : ", newFood
+        # print "New Ghost State :",newGhostStates
+        # print "New Scared Times :", newScaredTimes
+        # print "Score (auto) :", successorGameState.getScore()
+        # for index in newFood: # if newFood[index] == 'T']
+        #     for item in index:
+        #         if item == True:
+        #             trueIndices = index
+        # print "True states :", trueIndices
+        # print "Ghost:",successorGameState.getGhostPositions() #Gives the Ghost Position as a List
+        #print "-------------------------------------"
+        x,y = newPos
+        #x1,y1 = newGhostPos[0]
+        #distancePtoG = manhattanDistance(newPos,newGhostPos[0])
+        #print "Distance (Pacman to Ghost) =", x,y,x1,y1
+        #print "Ghost:",distancePtoG
+        for item in newFoodPos:
+            #distancePtoF += manhattanDistance(newPos,item)
+            if (manhattanDistance(newPos,item) < distancePtoF):
+                distancePtoF = manhattanDistance(newPos,item)
+
+        for item in newGhostPos:
+            distancePtoG += manhattanDistance(newPos, item)
+
+        #print "D :",distancePtoF
+        #print "-------------------------------------"
+        #newFood.asList()
+        #return distancePtoG + (1/distancePtoF)
+        if(distancePtoF != 0):
+            return successorGameState.getScore() + (distancePtoG/distancePtoF)
+        return successorGameState.getScore() + distancePtoG
 
         "*** YOUR CODE HERE ***"
-        return successorGameState.getScore()
+        #return successorGameState.getScore()
 
 def scoreEvaluationFunction(currentGameState):
     """
