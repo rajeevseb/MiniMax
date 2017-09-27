@@ -53,65 +53,45 @@ class ReflexAgent(Agent):
 
     def evaluationFunction(self, currentGameState, action):
         """
-        Design a better evaluation function here.
+                Design a better evaluation function here.
 
-        The evaluation function takes in the current and proposed successor
-        GameStates (pacman.py) and returns a number, where higher numbers are better.
+                The evaluation function takes in the current and proposed successor
+                GameStates (pacman.py) and returns a number, where higher numbers are better.
 
-        The code below extracts some useful information from the state, like the
-        remaining food (newFood) and Pacman position after moving (newPos).
-        newScaredTimes holds the number of moves that each ghost will remain
-        scared because of Pacman having eaten a power pellet.
+                The code below extracts some useful information from the state, like the
+                remaining food (newFood) and Pacman position after moving (newPos).
+                newScaredTimes holds the number of moves that each ghost will remain
+                scared because of Pacman having eaten a power pellet.
 
-        Print out these variables to see what you're getting, then combine them
-        to create a masterful evaluation function.
-        """
+                Print out these variables to see what you're getting, then combine them
+                to create a masterful evaluation function.
+                """
         # Useful information you can extract from a GameState (pacman.py)
         successorGameState = currentGameState.generatePacmanSuccessor(action)
+        curFood = currentGameState.getFood().asList();
         newPos = successorGameState.getPacmanPosition()
         newFood = successorGameState.getFood()
         newGhostStates = successorGameState.getGhostStates()
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
-        newGhostPos = successorGameState.getGhostPositions()  #Newly defined
-        newFoodPos = newFood.asList()  #Newly defined
-        distancePtoF = 99999 #newly defined
-        distancePtoG = 0 #newly defined
-        # print "Successor state : ",successorGameState
-        # print "New position :", newPos
-        # print "New Food : ", newFood
-        # print "New Ghost State :",newGhostStates
-        # print "New Scared Times :", newScaredTimes
-        # print "Score (auto) :", successorGameState.getScore()
-        # for index in newFood: # if newFood[index] == 'T']
-        #     for item in index:
-        #         if item == True:
-        #             trueIndices = index
-        # print "True states :", trueIndices
-        # print "Ghost:",successorGameState.getGhostPositions() #Gives the Ghost Position as a List
-        #print "-------------------------------------"
-        x,y = newPos
-        #x1,y1 = newGhostPos[0]
-        #distancePtoG = manhattanDistance(newPos,newGhostPos[0])
-        #print "Distance (Pacman to Ghost) =", x,y,x1,y1
-        #print "Ghost:",distancePtoG
-        for item in newFoodPos:
-            #distancePtoF += manhattanDistance(newPos,item)
-            if (manhattanDistance(newPos,item) < distancePtoF):
-                distancePtoF = manhattanDistance(newPos,item)
-
-        for item in newGhostPos:
-            distancePtoG += manhattanDistance(newPos, item)
-
-        #print "D :",distancePtoF
-        #print "-------------------------------------"
-        #newFood.asList()
-        #return distancePtoG + (1/distancePtoF)
-        if(distancePtoF != 0):
-            return successorGameState.getScore() + (distancePtoG/distancePtoF)
-        return successorGameState.getScore() + distancePtoG
 
         "*** YOUR CODE HERE ***"
-        #return successorGameState.getScore()
+        Foodposition = newFood.asList();
+        foodscores = []
+        ghostScores = []
+        ghostFactor = -.5
+        if (newPos in curFood):
+            farthestFood = 2
+        else:
+            for food in Foodposition:
+                foodscores.append(1 / float((1 + manhattanDistance(newPos, food))))
+            farthestFood = max(foodscores);
+        for ghostState in newGhostStates:
+            ghostScores.append(1 / float(1 + manhattanDistance(newPos, ghostState.configuration.getPosition())))
+        closestGhost = min(ghostScores)
+        sumOfGhosts = sum(ghostScores)
+        if (closestGhost <= .6):
+            ghostFactor = -2
+        return farthestFood + ghostFactor * sumOfGhosts + successorGameState.getScore();
 
 def scoreEvaluationFunction(currentGameState):
     """
