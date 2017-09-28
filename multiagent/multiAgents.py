@@ -259,6 +259,40 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
       Your expectimax agent (question 4)
     """
 
+    def maxValue(self,gameState,depth,agentIndex):
+        if( self.isTerminalState(gameState,depth)):
+                return self.utilityFunction(gameState)
+        v = float("-inf")
+        actions = gameState.getLegalActions(agentIndex)
+        for action in actions:
+            #print( "Agent"  + str(agentIndex) + action )
+            actionValue = self.minValue(gameState.generateSuccessor(agentIndex , action), depth, agentIndex + 1)
+            if(agentIndex == 0 and depth == 0 ):
+                self.actionValueDictionary[actionValue] = action
+            v=  max(v,actionValue)
+        return v
+
+    def minValue(self,gameState,depth,agentIndex):
+        #To keep track of total number of utility
+        count = 0.0
+        if( self.isTerminalState(gameState,depth)):
+                return self.utilityFunction(gameState)
+        v = 0.0
+        actions = gameState.getLegalActions(agentIndex)
+        # current agent is the last ghost then increase depth by one since one ply is completed
+        if(agentIndex == gameState.getNumAgents() -1 ) :
+            for action in actions:
+                #print("Agent" + str(agentIndex) + action)
+                v += self.maxValue(gameState.generateSuccessor(agentIndex, action), depth + 1, 0)
+                count += 1.0
+        else :
+            for action in actions:
+                #print("Agent" + str(agentIndex) + action)
+                v += self.minValue(gameState.generateSuccessor(agentIndex , action), depth, agentIndex + 1)
+                count += 1.0
+
+        return (v/count)
+
     def getAction(self, gameState):
         """
           Returns the expectimax action using self.depth and self.evaluationFunction
@@ -266,6 +300,10 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
           All ghosts should be modeled as choosing uniformly at random from their
           legal moves.
         """
+        self.actionValueDictionary ={}
+        v =  self.maxValue(gameState,0,0)
+        print("[" + str(v) + " " + str(self.actionValueDictionary[v]) + "]");
+        return self.actionValueDictionary[v]
         "*** YOUR CODE HERE ***"
         util.raiseNotDefined()
 
