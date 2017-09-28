@@ -266,13 +266,13 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         actions = gameState.getLegalActions(agentIndex)
         for action in actions:
             #print( "Agent"  + str(agentIndex) + action )
-            actionValue = self.minValue(gameState.generateSuccessor(agentIndex , action), depth, agentIndex + 1)
+            actionValue = self.expValue(gameState.generateSuccessor(agentIndex , action), depth, agentIndex + 1)
             if(agentIndex == 0 and depth == 0 ):
                 self.actionValueDictionary[actionValue] = action
             v=  max(v,actionValue)
         return v
 
-    def minValue(self,gameState,depth,agentIndex):
+    def expValue(self,gameState,depth,agentIndex):
         #To keep track of total number of utility
         count = 0.0
         if( self.isTerminalState(gameState,depth)):
@@ -288,7 +288,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         else :
             for action in actions:
                 #print("Agent" + str(agentIndex) + action)
-                v += self.minValue(gameState.generateSuccessor(agentIndex , action), depth, agentIndex + 1)
+                v += self.expValue(gameState.generateSuccessor(agentIndex , action), depth, agentIndex + 1)
                 count += 1.0
 
         return (v/count)
