@@ -122,11 +122,59 @@ class MultiAgentSearchAgent(Agent):
         self.index = 0 # Pacman is always agent index 0
         self.evaluationFunction = util.lookup(evalFn, globals())
         self.depth = int(depth)
+        self.actionValueDictionary = {}
+
+    def isTerminalState(self,gameState,depth):
+        endOfgame = False;
+        if( gameState.isWin() or gameState.isLose()):
+            endOfgame =True
+        elif(depth == self.depth):
+            endOfgame = True
+
+        return endOfgame
+
+    def utilityFunction(self,gameState):
+        return self.evaluationFunction(gameState)
+
+
+
+
+
 
 class MinimaxAgent(MultiAgentSearchAgent):
     """
       Your minimax agent (question 2)
     """
+
+
+    def maxValue(self,gameState,depth,agentIndex):
+        if( self.isTerminalState(gameState,depth)):
+                return self.utilityFunction(gameState)
+        v = float("-inf")
+        actions = gameState.getLegalActions(agentIndex)
+        for action in actions:
+            #print( "Agent"  + str(agentIndex) + action )
+            actionValue = self.minValue(gameState.generateSuccessor(agentIndex , action), depth, agentIndex + 1)
+            if(agentIndex == 0 and depth == 0 ):
+                self.actionValueDictionary[actionValue] = action
+            v=  max(v,actionValue)
+        return v
+
+    def minValue(self,gameState,depth,agentIndex):
+        if( self.isTerminalState(gameState,depth)):
+                return self.utilityFunction(gameState)
+        v = float("+inf")
+        actions = gameState.getLegalActions(agentIndex)
+        # current agent is the last ghost then increase depth by one since one ply is completed
+        if(agentIndex == gameState.getNumAgents() -1 ) :
+            for action in actions:
+                #print("Agent" + str(agentIndex) + action)
+                v=  min(v, self.maxValue(gameState.generateSuccessor(agentIndex, action), depth + 1, 0))
+        else :
+            for action in actions:
+                #print("Agent" + str(agentIndex) + action)
+                v = min(v, self.minValue(gameState.generateSuccessor(agentIndex , action), depth, agentIndex + 1))
+        return v
 
     def getAction(self, gameState):
         """
@@ -145,6 +193,10 @@ class MinimaxAgent(MultiAgentSearchAgent):
           gameState.getNumAgents():
             Returns the total number of agents in the game
         """
+        self.actionValueDictionary ={}
+        v =  self.maxValue(gameState,0,0)
+        print("[" + str(v) + " " + str(self.actionValueDictionary[v]) + "]");
+        return self.actionValueDictionary[v]
         "*** YOUR CODE HERE ***"
         util.raiseNotDefined()
 
@@ -153,11 +205,53 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
       Your minimax agent with alpha-beta pruning (question 3)
     """
 
+    def maxValue(self,gameState,depth,agentIndex,alpha,beta):
+        if( self.isTerminalState(gameState,depth)):
+                return self.utilityFunction(gameState)
+        v = float("-inf")
+        actions = gameState.getLegalActions(agentIndex)
+        for action in actions:
+            #print( "Agent"  + str(agentIndex) + action )
+            actionValue = self.minValue(gameState.generateSuccessor(agentIndex , action), depth, agentIndex + 1,alpha,beta)
+            if(agentIndex == 0 and depth == 0 ):
+                self.actionValueDictionary[actionValue] = action
+            v=  max(v,actionValue)
+            if(v >= beta):
+                return v
+            alpha  = max(alpha,v)
+        return v
+
+    def minValue(self,gameState,depth,agentIndex,alpha,beta):
+        if( self.isTerminalState(gameState,depth)):
+                return self.utilityFunction(gameState)
+        v = float("+inf")
+        actions = gameState.getLegalActions(agentIndex)
+        # current agent is the last ghost then increase depth by one since one ply is completed
+        if(agentIndex == gameState.getNumAgents() -1 ) :
+            for action in actions:
+                #print("Agent" + str(agentIndex) + action)
+                v=  min(v, self.maxValue(gameState.generateSuccessor(agentIndex, action), depth + 1, 0,alpha,beta))
+                if(v <= alpha):
+                    return v
+                beta = min(beta,v)
+        else :
+            for action in actions:
+                #print("Agent" + str(agentIndex) + action)
+                v = min(v, self.minValue(gameState.generateSuccessor(agentIndex , action), depth, agentIndex + 1,alpha,beta))
+                if(v <= alpha):
+                    return v
+                beta = min(beta,v)
+        return v
+
     def getAction(self, gameState):
         """
           Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
+        self.actionValueDictionary = {}
+        v = self.maxValue(gameState, 0, 0,float("-inf"),float("inf"))
+        #print("[" + str(v) + " " + str(self.actionValueDictionary[v]) + "]");
+        return self.actionValueDictionary[v]
         util.raiseNotDefined()
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
