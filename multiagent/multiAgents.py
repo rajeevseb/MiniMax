@@ -216,7 +216,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
             if(agentIndex == 0 and depth == 0 ):
                 self.actionValueDictionary[actionValue] = action
             v=  max(v,actionValue)
-            if(v >= beta):
+            if(v > beta):
                 return v
             alpha  = max(alpha,v)
         return v
@@ -231,14 +231,14 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
             for action in actions:
                 #print("Agent" + str(agentIndex) + action)
                 v=  min(v, self.maxValue(gameState.generateSuccessor(agentIndex, action), depth + 1, 0,alpha,beta))
-                if(v <= alpha):
+                if(v < alpha):
                     return v
                 beta = min(beta,v)
         else :
             for action in actions:
                 #print("Agent" + str(agentIndex) + action)
                 v = min(v, self.minValue(gameState.generateSuccessor(agentIndex , action), depth, agentIndex + 1,alpha,beta))
-                if(v <= alpha):
+                if(v < alpha):
                     return v
                 beta = min(beta,v)
         return v
