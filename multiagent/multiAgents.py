@@ -66,16 +66,21 @@ class ReflexAgent(Agent):
                 Print out these variables to see what you're getting, then combine them
                 to create a masterful evaluation function.
                 """
+
         # Useful information you can extract from a GameState (pacman.py)
         successorGameState = currentGameState.generatePacmanSuccessor(action)
-        curFood = currentGameState.getFood().asList();
+        curFood = currentGameState.getFood().asList()
         newPos = successorGameState.getPacmanPosition()
         newFood = successorGameState.getFood()
         newGhostStates = successorGameState.getGhostStates()
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
 
         "*** YOUR CODE HERE ***"
-        Foodposition = newFood.asList();
+        # Get the Food Positions
+        # Use weighted distance for the Food points and Ghosts
+        # For better score, we are considering the Farthest available food point and nearest ghost
+
+        Foodposition = newFood.asList()
         foodscores = []
         ghostScores = []
         ghostFactor = -.5
@@ -84,14 +89,17 @@ class ReflexAgent(Agent):
         else:
             for food in Foodposition:
                 foodscores.append(1 / float((1 + manhattanDistance(newPos, food))))
-            farthestFood = max(foodscores);
+            farthestFood = max(foodscores)
         for ghostState in newGhostStates:
             ghostScores.append(1 / float(1 + manhattanDistance(newPos, ghostState.configuration.getPosition())))
+
         closestGhost = min(ghostScores)
         sumOfGhosts = sum(ghostScores)
+
         if (closestGhost <= .6):
             ghostFactor = -2
-        return farthestFood + ghostFactor * sumOfGhosts + successorGameState.getScore();
+
+        return farthestFood + ghostFactor * sumOfGhosts + successorGameState.getScore()
 
 def scoreEvaluationFunction(currentGameState):
     """
@@ -122,10 +130,12 @@ class MultiAgentSearchAgent(Agent):
         self.index = 0 # Pacman is always agent index 0
         self.evaluationFunction = util.lookup(evalFn, globals())
         self.depth = int(depth)
-        self.actionValueDictionary = {}
+        self.actionValueDictionary = {}  #Dictionary for holding the actions
 
+    # Function for checking if the Terminal state is reached
+    # If game is won or lost or maximum depth (terminal nodes) is reached
     def isTerminalState(self,gameState,depth):
-        endOfgame = False;
+        endOfgame = False
         if( gameState.isWin() or gameState.isLose()):
             endOfgame =True
         elif(depth == self.depth):
@@ -136,17 +146,18 @@ class MultiAgentSearchAgent(Agent):
     def utilityFunction(self,gameState):
         return self.evaluationFunction(gameState)
 
-
-
-
-
+    # We perform depth first search till the leaf node. Once we reach the leaf node
+    # we get the value from the utility evaluation function. We keep on generating
+    # all the successors resulting from legal actions available from any particular
+    # state. We have to keep multiple "min" layers in case of multiple ghosts for
+    # each "max" layer.
 
 class MinimaxAgent(MultiAgentSearchAgent):
     """
       Your minimax agent (question 2)
     """
 
-
+    # Maximizer function tries to return the maximum value possible from the available values
     def maxValue(self,gameState,depth,agentIndex):
         if( self.isTerminalState(gameState,depth)):
                 return self.utilityFunction(gameState)
@@ -160,11 +171,14 @@ class MinimaxAgent(MultiAgentSearchAgent):
             v=  max(v,actionValue)
         return v
 
+    # Minimizer function tries to return the minimum value from the values available
+
     def minValue(self,gameState,depth,agentIndex):
         if( self.isTerminalState(gameState,depth)):
                 return self.utilityFunction(gameState)
         v = float("+inf")
         actions = gameState.getLegalActions(agentIndex)
+
         # current agent is the last ghost then increase depth by one since one ply is completed
         if(agentIndex == gameState.getNumAgents() -1 ) :
             for action in actions:
@@ -175,6 +189,9 @@ class MinimaxAgent(MultiAgentSearchAgent):
                 #print("Agent" + str(agentIndex) + action)
                 v = min(v, self.minValue(gameState.generateSuccessor(agentIndex , action), depth, agentIndex + 1))
         return v
+
+    # Returns the best possible action from root based on backed up values from leaf nodes to root
+    # by alternating between "min" and "max" layers
 
     def getAction(self, gameState):
         """
@@ -193,12 +210,22 @@ class MinimaxAgent(MultiAgentSearchAgent):
           gameState.getNumAgents():
             Returns the total number of agents in the game
         """
-        self.actionValueDictionary ={}
+        self.actionValueDictionary = {}
         v =  self.maxValue(gameState,0,0)
-        print("[" + str(v) + " " + str(self.actionValueDictionary[v]) + "]");
+        #print("[" + str(v) + " " + str(self.actionValueDictionary[v]) + "]");
         return self.actionValueDictionary[v]
         "*** YOUR CODE HERE ***"
         util.raiseNotDefined()
+
+    # We perform depth first search till the leaf node. Once we reach the leaf node
+    # we get the value from the utility evaluation function. We keep on generating
+    # all the successors resulting from legal actions available from any particular
+    # state. We have to keep multiple "min" layers in case of multiple ghosts for
+    # each "max" layer. We applied pruning to those branches which we are sure the
+    # maximizer will never take. If already found value at a leaf node is greater
+    # than the next subtree at the minimizer, we would stop our search through that
+    # subtree and proceed for next. We continue this till the end and pruning all
+    # the necessary branches.
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
@@ -215,10 +242,10 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
             actionValue = self.minValue(gameState.generateSuccessor(agentIndex , action), depth, agentIndex + 1,alpha,beta)
             if(agentIndex == 0 and depth == 0 ):
                 self.actionValueDictionary[actionValue] = action
-            v=  max(v,actionValue)
+            v = max(v,actionValue)
             if(v > beta):
                 return v
-            alpha  = max(alpha,v)
+            alpha = max(alpha,v)
         return v
 
     def minValue(self,gameState,depth,agentIndex,alpha,beta):
@@ -226,11 +253,12 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
                 return self.utilityFunction(gameState)
         v = float("+inf")
         actions = gameState.getLegalActions(agentIndex)
+
         # current agent is the last ghost then increase depth by one since one ply is completed
         if(agentIndex == gameState.getNumAgents() -1 ) :
             for action in actions:
                 #print("Agent" + str(agentIndex) + action)
-                v=  min(v, self.maxValue(gameState.generateSuccessor(agentIndex, action), depth + 1, 0,alpha,beta))
+                v = min(v, self.maxValue(gameState.generateSuccessor(agentIndex, action), depth + 1, 0,alpha,beta))
                 if(v < alpha):
                     return v
                 beta = min(beta,v)
@@ -254,6 +282,14 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         return self.actionValueDictionary[v]
         util.raiseNotDefined()
 
+    # We perform depth first search till the leaf node. Once we reach the leaf node
+    # we get the value from the utility evaluation function. We keep on generating
+    # all the successors resulting from legal actions available from any particular
+    # state. We have to keep multiple "min" layers in case of multiple ghosts for
+    # each "max" layer. Instead of assuming the worst case scenario, i.e. the ghosts
+    # always play optimally, we consider them playing randomly. So, instead of
+    # taking the minimum of the values at "min", we calculated the average value.
+
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
       Your expectimax agent (question 4)
@@ -269,7 +305,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
             actionValue = self.expValue(gameState.generateSuccessor(agentIndex , action), depth, agentIndex + 1)
             if(agentIndex == 0 and depth == 0 ):
                 self.actionValueDictionary[actionValue] = action
-            v=  max(v,actionValue)
+            v = max(v,actionValue)
         return v
 
     def expValue(self,gameState,depth,agentIndex):
@@ -279,6 +315,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
                 return self.utilityFunction(gameState)
         v = 0.0
         actions = gameState.getLegalActions(agentIndex)
+
         # current agent is the last ghost then increase depth by one since one ply is completed
         if(agentIndex == gameState.getNumAgents() -1 ) :
             for action in actions:
@@ -302,7 +339,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         """
         self.actionValueDictionary ={}
         v =  self.maxValue(gameState,0,0)
-        print("[" + str(v) + " " + str(self.actionValueDictionary[v]) + "]");
+        #print("[" + str(v) + " " + str(self.actionValueDictionary[v]) + "]");
         return self.actionValueDictionary[v]
         "*** YOUR CODE HERE ***"
         util.raiseNotDefined()
